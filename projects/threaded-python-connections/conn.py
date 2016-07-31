@@ -104,13 +104,17 @@ try:
         
         def send(self, msg):
             #self.sio.write(unicode(msg))
-            self.ser.write(unicode(msg))
+            #self.ser.write(unicode(msg))
+            self.ser.write(msg)
         
         def readBit(self):
             data = self.ser.read(1)
             
             if data != self.eol:
-                self.buffer.append(data)
+                print(ord(data))
+                print(hex(ord(data)))
+                print(str(hex(ord(data))))
+                self.buffer.append(str(hex(ord(data)))[2:])
                 return True
             else:
                 return False
