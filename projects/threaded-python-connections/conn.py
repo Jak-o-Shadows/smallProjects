@@ -91,13 +91,16 @@ try:
             self.eol = "\n"
             
             self.buffer = []
+            self.connected = False
         
         def connect(self):
             self.ser = serial.Serial(port=self.port, baudrate=self.baudrate)
+            self.connected=True
             #self.sio = io.TextIOWrapper(io.BufferedRWPair(self.ser, self.ser, newline=self.eol))
             
         def disconnect(self):
             self.ser.close()
+            self.connected=False
         
         def send(self, msg):
             #self.sio.write(unicode(msg))
