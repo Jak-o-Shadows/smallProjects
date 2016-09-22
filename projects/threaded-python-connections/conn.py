@@ -92,23 +92,39 @@ try:
             
             self.buffer = []
             self.connected = False
+            
+            self.logFile = None
         
         def connect(self):
             self.ser = serial.Serial(port=self.port, baudrate=self.baudrate)
             self.connected=True
             #self.sio = io.TextIOWrapper(io.BufferedRWPair(self.ser, self.ser, newline=self.eol))
             
+        def openLog(self, fname):
+            if not self.logFile:
+                self.logFile = open(fname, "wb")
+            else:
+                raise Exception("Logfile already open")
+            
         def disconnect(self):
             self.ser.close()
             self.connected=False
+            if self.logFile:
+                self.logFile.close()
+            
+            
         
         def send(self, msg):
             #self.sio.write(unicode(msg))
             #self.ser.write(unicode(msg))
             self.ser.write(msg)
+            if self.logFile:
+                self.logFile.write("O:" + msg + "\n")
+                self.logFile.flush()
+
         
         def readBit(self):
-            data = self.ser.read(1)
+            data = self.readByte
             
             if data != self.eol:
                 print(ord(data))
@@ -118,6 +134,13 @@ try:
                 return True
             else:
                 return False
+                
+        def readByte(self):
+            data = self.ser.read(1)
+            if self.logFile:
+                self.logFile.write("I:" + str(hex(ord(data)))[2:].zfill(2) + "\n")
+                self.logFile.flush()
+            return data
                 
         def read(self):
             
