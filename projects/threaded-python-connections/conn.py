@@ -94,6 +94,9 @@ try:
             self.connected = False
             
             self.logFile = None
+            
+            self.type = "SERIAL"
+            self.dSize = 1
         
         def connect(self):
             self.ser = serial.Serial(port=self.port, baudrate=self.baudrate)
@@ -119,7 +122,7 @@ try:
             #self.ser.write(unicode(msg))
             self.ser.write(msg)
             if self.logFile:
-                self.logFile.write("O:" + msg + "\n")
+                self.logFile.write("O:" + hex(ord(msg)) + "\n")
                 self.logFile.flush()
 
         
@@ -155,7 +158,82 @@ try:
             
 except ImportError:
     print("Serial Unavailable")
-    pass
+
+   
+    
+try:
+    import usb
+    class USBProtocol(Protocol):
+        """
+        USB protocol, defaults to 64 byte, VID 0x0483, PID 0x5710
+        send endpoint of 0x01, recv endpoint of 0x81
+        """
+        def __init__(self):
+            self.vid = 0x0483
+            self.pid = 0x5710
+            self.dSize = 64
+            self.rxEP = 0x81
+            self.txEP = 0x01
+            self.timeout = 100
+                        
+            self.connected = False
+            
+            self.logFile = None
+            
+            self.type = "USB"
+        
+        def connect(self):
+            self.dev = usb.core.find(idVendor = self.vid, idProduct=self.pid)
+            self.dev.set_configuration()
+            #read one because the first lot is junk
+            self.readByte()
+            self.connected=True
+            
+        def openLog(self, fname):
+            if not self.logFile:
+                self.logFile = open(fname, "wb")
+            else:
+                raise Exception("Logfile already open")
+            
+        def disconnect(self):
+            self.dev.close()
+            self.connected=False
+            if self.logFile:
+                self.logFile.close()
+            
+            
+        
+        def send(self, msg):
+            data = self.dSize*[0]
+            data[0] = ord(msg)
+            print(data)
+            self.dev.write(self.txEP, data, self.timeout)
+            if self.logFile:
+                self.logFile.write("O:" + hex(ord(msg)) + "\n")
+                self.logFile.flush()
+
+
+                
+        def readByte(self):
+            """
+                USB is a packet protocol - actually reads a packet
+                Not renamed cause I'm lazy
+            """
+            data = self.dev.read(self.rxEP, self.dSize, self.timeout)
+            print("rx", data)
+            data = [chr(x) for x in data]
+            if self.logFile:
+                for i in data:
+                    self.logFile.write("I:" + str(hex(ord(i)))[2:].zfill(2) + "\n")
+                    self.logFile.flush()
+            return data
+    
+    
+    
+except ImportError, e:
+    print("USB Unavailable")
+    print(e)
+    
 
 class SocketProtocol(Protocol):
     """Send and recieve messages over an tcp/ip socket
