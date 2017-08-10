@@ -174,7 +174,7 @@ try:
             self.dSize = 64
             self.rxEP = 0x81
             self.txEP = 0x01
-            self.timeout = 100
+            self.timeout = 1500#ms
                         
             self.connected = False
             
@@ -206,7 +206,7 @@ try:
         def send(self, msg):
             data = self.dSize*[0]
             data[0] = ord(msg)
-            print(data)
+            #print(data)
             self.dev.write(self.txEP, data, self.timeout)
             if self.logFile:
                 self.logFile.write("O:" + hex(ord(msg)) + "\n")
@@ -220,7 +220,7 @@ try:
                 Not renamed cause I'm lazy
             """
             data = self.dev.read(self.rxEP, self.dSize, self.timeout)
-            print("rx", data)
+            #print("rx", data)
             data = [chr(x) for x in data]
             if self.logFile:
                 for i in data:
