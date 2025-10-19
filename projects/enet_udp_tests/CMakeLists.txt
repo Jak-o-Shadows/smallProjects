@@ -4,8 +4,8 @@ project(EnetExample)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find the enet package provided by Conan
-find_package(enet REQUIRED)
+# Find the asio package provided by Conan
+find_package(asio REQUIRED)
 
 # Common library for connection logic
 add_library(common
@@ -15,7 +15,12 @@ add_library(common
 target_include_directories(common PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-target_link_libraries(common enet::enet)
+target_link_libraries(common PUBLIC asio::asio)
+
+if(WIN32)
+  # Target Windows 10 or later
+  target_compile_definitions(common PUBLIC _WIN32_WINNT=0x0A00)
+endif()
 
 # Sender executable
 add_executable(sender 

@@ -12,7 +12,7 @@ class EnetExampleConan(ConanFile):
         self.tool_requires("cmake/[>=3.26.4]")  # Pretty arbitrary tbh
 
     def requirements(self):
-        self.requires("enet/1.3.17")
+        self.requires("asio/1.28.1")
 
     def build(self):
         cmake = CMake(self)

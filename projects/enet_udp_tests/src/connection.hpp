@@ -1,35 +1,28 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
-#include <enet/enet.h>
+#include <asio.hpp>
 #include <string>
 #include <vector>
 
 class Connection {
 public:
-    Connection();
-    ~Connection();
+    // Connect joins the multicast group.
+    bool Connect(const std::string& multicast_address, short multicast_port);
 
-    // For a server, pass an empty address string and the port to listen on.
-    // For a client, pass the server address and port to connect to.
-    bool Connect(const std::string& address, enet_uint16 port);
-
+    // Disconnect leaves the group.
     void Disconnect();
 
-    // For a client, sends data to the server peer.
-    // For a server, broadcasts to all connected peers.
-    void Send(const std::vector<char>& data);
+    // Send multicasts a datagram to the group.
+    void Send(const char* data, size_t data_length);
 
-    // Blocking call that waits for and returns a datagram.
-    // Handles connect/disconnect events internally.
-    // Returns an empty vector on error or if Disconnect is called.
+    // Receive waits for and returns a datagram from the group.
     std::vector<char> Receive();
 
 private:
-    ENetHost* m_host = nullptr;
-    ENetPeer* m_peer = nullptr; // For a client, this is the connection to the server.
-    bool m_is_server = false;
-    bool m_disconnecting = false;
+    asio::io_context m_io_context;
+    asio::ip::udp::socket m_socket{m_io_context};
+    asio::ip::udp::endpoint m_endpoint;
 };
 
 #endif // CONNECTION_HPP
