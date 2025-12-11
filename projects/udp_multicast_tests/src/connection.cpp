@@ -13,11 +13,23 @@ bool Connection::Connect(const std::string& multicast_address_str, short multica
         m_endpoint = asio::ip::udp::endpoint(multicast_address, multicast_port);
 
         m_socket.open(listen_endpoint.protocol());
-        m_socket.set_option(asio::ip::udp::socket::reuse_address(true));
+
+        asio::error_code ec;
+        m_socket.set_option(asio::ip::udp::socket::reuse_address(true), ec);
+        if (ec) {
+            std::cerr << "Failed to set reuse_address option: " << ec.message() << std::endl;
+            // Non-fatal, just log it.
+        }
+
         m_socket.bind(listen_endpoint);
 
         // Join the multicast group.
-        m_socket.set_option(asio::ip::multicast::join_group(multicast_address));
+        m_socket.set_option(asio::ip::multicast::join_group(multicast_address), ec);
+        if (ec) {
+            std::cerr << "Failed to join multicast group: " << ec.message() << std::endl;
+            m_socket.close();
+            return false;
+        }
 
         std::cout << "Successfully joined multicast group " << multicast_address_str << ":" << multicast_port << std::endl;
         return true;
